@@ -29,4 +29,4 @@ Requires `acestep_v1.5_xl_turbo_bf16.safetensors` (9.3 GB) in
 
 GPL-3.0 — derivative work of [ComfyUI](https://github.com/comfyanonymous/ComfyUI).
 
-Copyright (c) 2025-2026 Creative Mayhem UG
+2025-2026 Creative Mayhem UG
