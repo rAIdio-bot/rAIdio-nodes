@@ -26,6 +26,16 @@ def _resolve_device():
     return "cpu"
 
 
+def _get_download_root():
+    """Cache faster-whisper models in ComfyUI's models dir instead of ~/.cache."""
+    import os
+    import folder_paths
+    models_dir = folder_paths.models_dir
+    cache_dir = os.path.join(models_dir, "faster-whisper")
+    os.makedirs(cache_dir, exist_ok=True)
+    return cache_dir
+
+
 def _get_model(model_size, device):
     compute = "float16" if device == "cuda" else "int8"
     key = (model_size, device, compute)
@@ -39,12 +49,26 @@ def _get_model(model_size, device):
             "faster-whisper is not installed. "
             "Please install it in your ComfyUI environment."
         )
-    print(
-        f"[rAIdio.bot] Loading faster-whisper model: {model_size} "
-        f"({compute} on {device})...",
-        flush=True,
-    )
-    model = WhisperModel(model_size, device=device, compute_type=compute)
+    import os
+    download_root = _get_download_root()
+    # Check if model is pre-shipped as a local directory
+    local_model_dir = os.path.join(download_root, f"faster-whisper-{model_size}")
+    if os.path.isdir(local_model_dir) and os.path.exists(os.path.join(local_model_dir, "model.bin")):
+        model_path = local_model_dir
+        print(
+            f"[rAIdio.bot] Loading faster-whisper model from local: {model_path} "
+            f"({compute} on {device})...",
+            flush=True,
+        )
+    else:
+        model_path = model_size  # Downloads from Systran HF repo
+        print(
+            f"[rAIdio.bot] Loading faster-whisper model: {model_size} "
+            f"({compute} on {device}, cache: {download_root})...",
+            flush=True,
+        )
+    model = WhisperModel(model_path, device=device, compute_type=compute,
+                         download_root=download_root)
     print(f"[rAIdio.bot] faster-whisper model loaded: {model_size}", flush=True)
     _WHISPER_CACHE[key] = model
     return model
