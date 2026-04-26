@@ -20,7 +20,7 @@ logged as a warning but never raises — the bundled install must keep
 working even if a future torch version breaks the wrapper.
 
 Threat model + Phase 2a/2b/2c scope:
-  https://github.com/neitzert/rAIdio-rust/blob/master/docs/security/model-loading.md
+  https://github.com/rAIdio-bot/sbom/blob/main/docs/security/model-loading.md
 
 Licensed under GPL-3.0 — applied to GPL-3.0 licensed ComfyUI ecosystem.
 Source: https://github.com/rAIdio-bot/rAIdio-nodes

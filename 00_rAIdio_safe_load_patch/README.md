@@ -35,7 +35,7 @@ entirely, and `picklescan` provides a second-opinion refusal for
 files the upstream library happened to load with `weights_only=False`.
 
 Full Phase 2a/2b/2c scope:
-<https://github.com/neitzert/rAIdio-rust/blob/master/docs/security/model-loading.md>
+<https://github.com/rAIdio-bot/sbom/blob/main/docs/security/model-loading.md>
 
 ## Compatibility
 
