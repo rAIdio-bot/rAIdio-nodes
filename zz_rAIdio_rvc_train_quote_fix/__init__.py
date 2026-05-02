@@ -68,21 +68,68 @@ class _PatchedPopen(subprocess.Popen):
 
 
 def _apply_quote_patch():
+    # ComfyUI-RVC's nodes.py does `from .rvc.train import ...` (relative
+    # import) so the `rvc.train` it uses is registered under a different
+    # qualified name (e.g. `ComfyUI-RVC.rvc.train` via ComfyUI's loader)
+    # than the top-level `import rvc.train` we'd get from outside the
+    # package. Patching one doesn't patch the other — they're separate
+    # module objects keyed by qualified name in sys.modules.
+    #
+    # Solution: enumerate sys.modules and patch every train.py instance.
+    import sys
+
+    _PatchedPopen._raidio_quote_patched = True  # type: ignore[attr-defined]
+    patched_count = 0
+
+    # 1. Patch any already-loaded module that exposes a `Popen` attribute
+    #    pointing at the real subprocess.Popen and lives under an
+    #    rvc/train path.
+    for name, mod in list(sys.modules.items()):
+        if mod is None:
+            continue
+        popen = getattr(mod, "Popen", None)
+        if popen is not subprocess.Popen:
+            continue
+        # Match rvc.train and ComfyUI-RVC.rvc.train (or whatever the
+        # loader names it). Filename ending in "rvc/train.py" is the
+        # most reliable identifier.
+        mod_file = getattr(mod, "__file__", "") or ""
+        mod_file_norm = mod_file.replace("\\", "/").lower()
+        if not mod_file_norm.endswith("/rvc/train.py"):
+            continue
+        mod.Popen = _PatchedPopen
+        patched_count += 1
+        logging.info(
+            "[rAIdio rvc_train_quote_fix] patched Popen in %s (%s)",
+            name,
+            mod_file,
+        )
+
+    # 2. Also patch the top-level rvc.train import path for any caller
+    #    that uses the absolute import.
     try:
         from rvc import train as _rvc_train
+        if _rvc_train.Popen is subprocess.Popen:
+            _rvc_train.Popen = _PatchedPopen
+            patched_count += 1
+            logging.info(
+                "[rAIdio rvc_train_quote_fix] patched Popen in top-level rvc.train"
+            )
     except Exception as e:
         logging.warning(
-            "[rAIdio rvc_train_quote_fix] could not import rvc.train: %r", e
+            "[rAIdio rvc_train_quote_fix] could not import top-level rvc.train: %r",
+            e,
         )
-        return
 
-    if getattr(_rvc_train.Popen, "_raidio_quote_patched", False):
-        return
-    _PatchedPopen._raidio_quote_patched = True  # type: ignore[attr-defined]
-    _rvc_train.Popen = _PatchedPopen
-    logging.info(
-        "[rAIdio rvc_train_quote_fix] rvc.train.Popen wrapped — script paths re-quoted for spaces-in-path installs"
-    )
+    if patched_count == 0:
+        logging.warning(
+            "[rAIdio rvc_train_quote_fix] no rvc/train.py module found to patch"
+        )
+    else:
+        logging.info(
+            "[rAIdio rvc_train_quote_fix] wrapped Popen in %d module(s) — script paths re-quoted for spaces-in-path installs",
+            patched_count,
+        )
 
 
 _apply_quote_patch()
