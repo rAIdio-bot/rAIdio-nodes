@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """torchaudio.save compatibility patch.
 
 torchaudio 2.10.0 delegates save() to torchcodec which requires FFmpeg shared

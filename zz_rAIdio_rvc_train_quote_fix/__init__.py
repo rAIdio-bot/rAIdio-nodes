@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """rAIdio RVC train spaces-in-path quoting fix.
 
 ComfyUI-RVC's `rvc/train.py` builds shell command strings for the

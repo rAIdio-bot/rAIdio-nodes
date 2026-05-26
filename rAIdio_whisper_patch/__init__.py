@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """Whisper STT word-timestamp patch for ComfyUI-QwenTTS.
 
 Registers a replacement AILab_Qwen3TTSWhisperSTT node class that uses

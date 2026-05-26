@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """rAIdio RVC_Train directory-mode fix.
 
 ComfyUI-RVC's RVC_Train.INPUT_TYPES only declares a single `audio` input.

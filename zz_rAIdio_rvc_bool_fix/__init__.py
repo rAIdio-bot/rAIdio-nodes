@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """RVC boolean-to-i18n coercion patch for ComfyUI-RVC.
 
 Upstream ComfyUI-RVC defines its train flags as BOOLEAN inputs (if_save_latest,

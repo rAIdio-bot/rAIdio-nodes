@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """rAIdio RVC LoadAudio alias — sidestep the V1/V3 LoadAudio collision.
 
 ComfyUI 0.14.x ships a V3 `LoadAudio` in `comfy_extras/nodes_audio.py`

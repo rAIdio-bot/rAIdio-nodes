@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """rAIdio aimdo reset — recover GPU virtual-address-space fragmentation.
 
 Exposes `POST /aimdo_reset` on ComfyUI's HTTP server. The handler

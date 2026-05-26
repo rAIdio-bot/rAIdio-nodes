@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """rAIdio.bot utility nodes for ComfyUI."""
 import os
 import json

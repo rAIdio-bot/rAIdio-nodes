@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """ACE-Step 1.5 XL architecture patch for ComfyUI.
 
 Monkey-patches AceStepConditionGenerationModel to support separate encoder/decoder

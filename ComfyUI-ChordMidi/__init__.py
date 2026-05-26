@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """rAIdio.bot Chord Detection and MIDI Transcription nodes for ComfyUI."""
 
 from .chord_midi_nodes import ChordDetectNode, MidiTranscribeNode

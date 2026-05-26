@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """RVC argparse compatibility patch for ComfyUI.
 
 Monkey-patches ComfyUI-RVC's config.py to use parse_known_args() instead of

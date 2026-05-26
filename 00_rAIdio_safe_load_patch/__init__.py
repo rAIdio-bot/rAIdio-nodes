@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# Copyright (c) 2025-2026 Creative Mayhem UG
 """Safe-load patch — picklescan-gated torch.load, pickle.load, numpy.load.
 
 Closes the malicious-pickle-via-shared-model-file attack vector across
