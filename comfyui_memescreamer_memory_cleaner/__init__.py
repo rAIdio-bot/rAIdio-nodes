@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """Memescreamer Memory Cleaner — POST /clear_memory route for ComfyUI.
 
-Copyright (c) 2025 Creative Mayhem Ltd. All rights reserved.
-First-party component of the memescreamer platform (rAIdio.bot / vAIdeo.bot).
+First-party node by Creative Mayhem for the memescreamer platform
+(rAIdio.bot / vAIdeo.bot).
 
-DUAL LICENSE — free for non-commercial use under Creative Commons
-Attribution-NonCommercial-ShareAlike 4.0 (CC BY-NC-SA 4.0); commercial use
-requires a paid license from Creative Mayhem. rAIdio.bot ships under that
-commercial grant (Creative Mayhem is the copyright owner). Commercial
-licensing: license@creativemayhem.com
+License: GPL-3.0 (matches the patched ecosystem). This node imports ComfyUI's
+GPL-3.0 API (`server.PromptServer`, `comfy.model_management`), so it is a
+derivative work of the GPL-3.0 ComfyUI ecosystem and is licensed GPL-3.0 to
+match — exactly like the sibling `rAIdio_aimdo_reset` node. See LICENSE.
 
 WHY THIS EXISTS
   ComfyUI's `/free` endpoint only evicts models registered with

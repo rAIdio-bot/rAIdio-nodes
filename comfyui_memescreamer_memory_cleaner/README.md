@@ -1,9 +1,10 @@
 # Memescreamer Memory Cleaner
 
-First-party ComfyUI custom node for the memescreamer platform (rAIdio.bot / vAIdeo.bot).
-Copyright (c) 2025 Creative Mayhem. Free for non-commercial use under CC BY-NC-SA 4.0;
-commercial use requires a paid license (license@creativemayhem.com). rAIdio.bot ships
-under that commercial grant.
+First-party ComfyUI custom node by Creative Mayhem for the memescreamer platform
+(rAIdio.bot / vAIdeo.bot). Licensed **GPL-3.0**: this node imports ComfyUI's GPL-3.0
+API (`server.PromptServer`, `comfy.model_management`), making it a derivative work of
+the GPL-3.0 ComfyUI ecosystem — licensed GPL-3.0 to match, like the sibling
+`rAIdio_aimdo_reset` node. See LICENSE.
 
 ## What it does
 
