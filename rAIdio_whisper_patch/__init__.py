@@ -166,13 +166,13 @@ class Qwen3TTSWhisperSTT:
                 language=lang_arg,
                 task=task,
                 word_timestamps=True,
-                # Anti-hallucination: a separated vocal stem has near-silent gaps
-                # between sung phrases; without these, faster-whisper confabulates
-                # filler ("Thank you." x N) and condition_on_previous_text=True
-                # (the default) cascades that filler across the whole track.
+                # Anti-hallucination: faster-whisper's default
+                # condition_on_previous_text=True cascades a stray filler segment
+                # ("Thank you." x N) across the whole track; turning it off stops the
+                # cascade. Do NOT add vad_filter here — Silero VAD is a speech detector
+                # and strips SUNG vocals (it removed ~4:28 of a 4:30 track), leaving an
+                # empty transcript. Tune no_speech_threshold instead if gap-filler returns.
                 condition_on_previous_text=False,
-                vad_filter=True,
-                vad_parameters={"min_silence_duration_ms": 700},
             )
 
             if language == "auto":
