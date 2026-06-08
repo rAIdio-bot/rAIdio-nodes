@@ -166,6 +166,13 @@ class Qwen3TTSWhisperSTT:
                 language=lang_arg,
                 task=task,
                 word_timestamps=True,
+                # Anti-hallucination: a separated vocal stem has near-silent gaps
+                # between sung phrases; without these, faster-whisper confabulates
+                # filler ("Thank you." x N) and condition_on_previous_text=True
+                # (the default) cascades that filler across the whole track.
+                condition_on_previous_text=False,
+                vad_filter=True,
+                vad_parameters={"min_silence_duration_ms": 700},
             )
 
             if language == "auto":
