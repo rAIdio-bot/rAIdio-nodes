@@ -84,65 +84,19 @@ def _evict_whisper_cache():
     return evicted
 
 
-def _unload_managed_models():
-    """Unload models registered with ComfyUI's model_management (e.g. ACE-Step).
-
-    `unload_all_models()` can KeyError mid-sweep on some models — observed with
-    ACE-Step, inside `LoadedModel.model_unload -> model.detach(unpatch_weights=True)`
-    on a stale weight key. The bulk call has no per-model guard, so one bad model
-    aborts the whole sweep BEFORE anything is freed AND before `soft_empty_cache()`
-    runs, leaving every model resident (0 GB freed). So:
-      1. try the fast bulk path;
-      2. on failure, unload each model individually (one bad model can't block the
-         rest); if a model's default unload throws, retry with unpatch_weights=False
-         — we are EVICTING to free VRAM, not restoring, so skipping the unpatch step
-         is fine and dodges the exact line that raises;
-      3. ALWAYS soft_empty_cache() at the end, even if unload threw.
-    Never raises out; returns True once cleanup was attempted (False only if
-    model_management can't be imported). Uses the module-level `logging` (importing
-    it locally would shadow it and UnboundLocalError in the import-failure branch).
-    """
-    try:
-        import comfy.model_management as mm
-    except Exception as e:
-        logging.warning("[memescreamer_memory_cleaner] import model_management failed: %s", e)
-        return False
-
-    try:
-        mm.unload_all_models()  # fast path
-    except Exception as e:
-        logging.warning(
-            "[memescreamer_memory_cleaner] unload_all_models failed (%s); "
-            "falling back to per-model unload",
-            e,
-        )
-        try:
-            for loaded_model in list(mm.current_loaded_models):  # snapshot
-                try:
-                    loaded_model.model_unload()
-                except Exception:
-                    # Default unload unpatches weights (the path that KeyErrors on
-                    # ACE-Step). Retry without unpatching to still evict + free VRAM.
-                    try:
-                        loaded_model.model_unload(unpatch_weights=False)
-                    except Exception as model_error:
-                        logging.warning(
-                            "[memescreamer_memory_cleaner] per-model unload failed (%s); continuing",
-                            model_error,
-                        )
-        except Exception as iter_error:
-            logging.warning(
-                "[memescreamer_memory_cleaner] per-model unload iteration failed: %s",
-                iter_error,
-            )
-
-    # Always return freed blocks to the allocator, even if unload threw above.
-    try:
-        mm.soft_empty_cache(True)
-    except Exception as cache_error:
-        logging.warning("[memescreamer_memory_cleaner] soft_empty_cache failed: %s", cache_error)
-
-    return True
+# NOTE (2026-06-11): the former `_unload_managed_models()` helper — which called
+# `comfy.model_management.unload_all_models()` — was REMOVED. On ACE-Step it
+# KeyErrored mid-sweep (`model.detach(unpatch_weights=True)` on a stale weight key),
+# aborting before anything was freed, so the cleaner reported `freed 0.00 GB`.
+# Forcing an unload here was wrong on two counts:
+#   • it contradicts rAIdio's own VRAM strategy — `/free` deliberately stopped
+#     sending `unload_models:true` because ComfyUI's model_management auto-evicts
+#     under pressure (see src-tauri backend/comfy_client.rs); and
+#   • the proven doomscroll cleaner never unloads models here — it clears the CUDA
+#     cache + GC + trims the working set, and lets `/free {unload_models:true}`
+#     handle model eviction separately.
+# So clear_memory() no longer unloads managed models. It does the job /free can't:
+# evict the whisper cache + return SeedVC/Demucs allocator residue to the driver.
 
 
 def _trim_working_set():
@@ -174,9 +128,9 @@ def clear_memory():
     #    become free for the allocator to reclaim.
     whisper_evicted = _evict_whisper_cache()
 
-    # 2. Unload model_management-tracked models (belt-and-suspenders; /free
-    #    already does this, but the route may be called standalone).
-    _unload_managed_models()
+    # 2. (Intentionally no model unload here — see the removal note above.)
+    #    /free + model_management auto-eviction handle resident models; forcing
+    #    unload_all_models() here KeyErrored on ACE-Step and froze 0 GB.
 
     # 3. Drop dangling Python refs (SeedVC / Demucs locals already out of
     #    scope after the node returned; this collects their cycles).
