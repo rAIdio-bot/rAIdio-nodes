@@ -15,11 +15,55 @@ Source: https://github.com/rAIdio-bot/rAIdio-nodes
 """
 import json
 import logging
+import sys
 
 import numpy as np
 import torch
 
 _WHISPER_CACHE = {}
+_CUDNN_PRELOADED = False
+
+
+def _preload_cudnn_ops():
+    """Make cuDNN 9's engine libs loadable for faster-whisper on Linux.
+
+    faster-whisper's CTranslate2 backend lazily dlopen()s the split cuDNN 9
+    engine libraries (libcudnn_ops.so.9, libcudnn_cnn.so.9) by bare soname
+    at transcription time. On Linux those ship in the nvidia-cudnn wheel
+    under site-packages/nvidia/cudnn/lib/, which is NOT on the loader path,
+    so the dlopen fails ("Unable to load libcudnn_ops.so.9 / Cannot load
+    symbol cudnnCreateTensorDescriptor") and the transcription hard-crashes
+    the backend — Sing Along gets a separated track but no lyrics.
+
+    Loading them here with RTLD_GLOBAL registers their sonames in the
+    process, so CTranslate2's later dlopen resolves to the already-loaded
+    objects (verified on-box: reproduces the crash without this, and
+    transcribes cleanly with it). Windows is unaffected — its cuDNN DLLs
+    are already on PATH. We touch only the dynamic loader, never any FOSS
+    source, matching the monkey-patch discipline of the other rAIdio nodes."""
+    global _CUDNN_PRELOADED
+    if _CUDNN_PRELOADED or not sys.platform.startswith("linux"):
+        return
+    import ctypes
+    import os
+    try:
+        # nvidia.cudnn is a PEP 420 namespace package (no __file__); use __path__.
+        import nvidia.cudnn
+        libdir = os.path.join(list(nvidia.cudnn.__path__)[0], "lib")
+    except Exception as e:  # nvidia-cudnn wheel absent → nothing to preload
+        logging.warning("[rAIdio whisper-cudnn] nvidia.cudnn not found: %r", e)
+        return
+    for name in ("libcudnn_cnn.so.9", "libcudnn_ops.so.9"):
+        path = os.path.join(libdir, name)
+        try:
+            ctypes.CDLL(path, mode=ctypes.RTLD_GLOBAL)
+        except OSError as e:
+            logging.warning("[rAIdio whisper-cudnn] preload failed for %s: %r", name, e)
+            return
+    _CUDNN_PRELOADED = True
+    msg = "[rAIdio whisper-cudnn] preloaded cuDNN ops/cnn engine libs (Linux)"
+    logging.info(msg)
+    print(msg, flush=True)
 
 
 def _resolve_device():
@@ -69,6 +113,8 @@ def _get_model(model_size, device):
             f"({compute} on {device}, cache: {download_root})...",
             flush=True,
         )
+    if device == "cuda":
+        _preload_cudnn_ops()
     model = WhisperModel(model_path, device=device, compute_type=compute,
                          download_root=download_root)
     print(f"[rAIdio.bot] faster-whisper model loaded: {model_size}", flush=True)
